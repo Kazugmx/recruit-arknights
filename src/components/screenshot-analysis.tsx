@@ -70,7 +70,7 @@ export default function ScreenshotAnalysis({ applyOcrTags }: ScreenshotAnalysisP
                 <Label htmlFor="picture">
                     スクリーンショット{" "}
                     <span className="text-gray-500 dark:text-gray-400">
-                        (.png, .jpg, .jpeg)
+                        (.png, .jpg, .jpeg, .webp)
                     </span>
                 </Label>
                 <Input
@@ -78,7 +78,7 @@ export default function ScreenshotAnalysis({ applyOcrTags }: ScreenshotAnalysisP
                     className="mt-1 h-auto text-sm px-2.5 py-3.5 text-gray-500 dark:text-gray-400"
                     onChange={handleFileChange}
                     type="file"
-                    accept="image/*;capture=camera"
+                    accept="image/png,image/jpeg,image/webp"
                     disabled={isLoading}
                 />
             </div>

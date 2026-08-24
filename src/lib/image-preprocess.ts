@@ -2,6 +2,7 @@ const MAX_IMAGE_SIZE = 1024 * 1024; // 1MB
 const IMAGE_QUALITY = 0.8;
 const MAX_WIDTH = 2400;
 const MAX_HEIGHT = 1800;
+const SUPPORTED_IMAGE_TYPES = new Set(["image/png", "image/jpeg", "image/webp"]);
 
 /**
  * 画像の前処理を行う関数。
@@ -9,7 +10,7 @@ const MAX_HEIGHT = 1800;
  */
 export async function preprocessImage(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
-    if (!file.type.startsWith("image/")) {
+    if (!SUPPORTED_IMAGE_TYPES.has(file.type)) {
       reject("サポートされていない画像形式です。");
       return;
     }

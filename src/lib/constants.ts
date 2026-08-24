@@ -24,3 +24,14 @@ export const OCR_TIMEOUT = {
   CLIENT_MS: 30_000,
   SERVER_MS: 15_000,
 } as const;
+
+/** OCR API に許可する画像の上限・負荷制御 */
+export const OCR_SECURITY = {
+  /** デコード後の画像サイズ。Google Vision の上限より十分小さく制限する。 */
+  MAX_IMAGE_BYTES: 5 * 1024 * 1024,
+  /** 同一クライアントが 1 分間に送れる OCR リクエスト数 */
+  MAX_REQUESTS_PER_WINDOW: 10,
+  RATE_LIMIT_WINDOW_MS: 60_000,
+  /** 単一プロセスで同時に実行する Vision API リクエスト数 */
+  MAX_CONCURRENT_REQUESTS: 3,
+} as const;
