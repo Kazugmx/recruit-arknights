@@ -16,7 +16,7 @@ export default function Operators() {
           {!isLoading && recruitData ? (
             recruitData.map((operator) => (
               <li key={operator.id}>
-                <a href={operator.wiki} rel="nooreferer" target="_blank">
+                <a href={operator.wiki} rel="noopener noreferrer" target="_blank">
                   <Card>
                     <div className="flex items-center gap-4 p-4">
                       <Avatar>
