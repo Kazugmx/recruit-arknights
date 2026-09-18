@@ -105,6 +105,9 @@ export default function ScreenshotAnalysis({ applyOcrTags }: ScreenshotAnalysisP
                     accept="image/png,image/jpeg,image/webp"
                     disabled={isLoading}
                 />
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                    画像をコピーして、この画面に貼り付けることもできます。
+                </p>
             </div>
 
             {isLoading && (
