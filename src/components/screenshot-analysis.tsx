@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import { toast } from "sonner";
 
 import { useScreenshotAnalysis } from "@/hooks/useScreenshotAnalysis";
@@ -18,16 +18,21 @@ const isSupportedImage = (file: File) =>
 export default function ScreenshotAnalysis({ applyOcrTags }: ScreenshotAnalysisProps) {
     const [ocrTags, setOcrTags] = useState<string[]>([]);
     const [error, setError] = useState<string | null>(null);
+    const isProcessingRef = useRef(false);
 
     const { analyzeImage, isLoading } = useScreenshotAnalysis();
 
     const processFile = useCallback(
         async (file: File) => {
+            if (isProcessingRef.current) return;
+            setError(null);
+
             if (!isSupportedImage(file)) {
                 setError("PNG、JPEG、WebP形式の画像を選択してください。");
-                return
+                return;
             }
 
+            isProcessingRef.current = true;
             try {
                 const extractedTags = await analyzeImage(file);
                 if (extractedTags.length === 0) {
@@ -45,10 +50,12 @@ export default function ScreenshotAnalysis({ applyOcrTags }: ScreenshotAnalysisP
             } catch (err) {
                 console.error(err);
                 setError("画像解析中にエラーが発生しました。");
+            } finally {
+                isProcessingRef.current = false;
             }
         },
         [analyzeImage, applyOcrTags]
-    )
+    );
 
     const handleFileChange = useCallback(
         async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -58,25 +65,29 @@ export default function ScreenshotAnalysis({ applyOcrTags }: ScreenshotAnalysisP
             // ここでリセットすることで、同じファイルの再選択も可能にしつつ
             // Safariの誤発火を防ぐ。
             e.target.value = "";
-            if (file) void processFile(file)
+            if (file) void processFile(file);
         },
         [processFile]
     );
 
-    const handlePaste = useCallback(
-        (e: React.ClipboardEvent<HTMLDivElement>) => {
+    useEffect(() => {
+        const handlePaste = (e: ClipboardEvent) => {
+            if (e.defaultPrevented || !e.clipboardData) return;
+
             const file = Array.from(e.clipboardData.files)
                 .find(isSupportedImage);
             if (!file) return;
 
             e.preventDefault();
             void processFile(file);
-        },
-        [processFile]
-    );
+        };
+
+        document.addEventListener("paste", handlePaste);
+        return () => document.removeEventListener("paste", handlePaste);
+    }, [processFile]);
 
     return (
-        <div onPaste={handlePaste}>
+        <>
             <hgroup className="flex items-center gap-3">
                 <h2 className="text-3xl font-extrabold tracking-tight">Image Analysis</h2>
                 <p className="mt-1 text-gray-500 dark:text-gray-400 font-bold tracking-tight">画像解析</p>
@@ -151,6 +162,6 @@ export default function ScreenshotAnalysis({ applyOcrTags }: ScreenshotAnalysisP
                     </ul>
                 </div>
             )}
-        </div>
+        </>
     );
 }
