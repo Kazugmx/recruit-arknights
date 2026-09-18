@@ -12,22 +12,21 @@ interface ScreenshotAnalysisProps {
     applyOcrTags: (ocrTags: string[]) => void;
 }
 
+const isSupportedImage = (file: File) =>
+    ["image/png", "image/jpeg", "image/webp"].includes(file.type);
+
 export default function ScreenshotAnalysis({ applyOcrTags }: ScreenshotAnalysisProps) {
     const [ocrTags, setOcrTags] = useState<string[]>([]);
     const [error, setError] = useState<string | null>(null);
 
     const { analyzeImage, isLoading } = useScreenshotAnalysis();
 
-    const handleFileChange = useCallback(
-        async (e: React.ChangeEvent<HTMLInputElement>) => {
-            const file = e.target.files?.[0];
-            // Safariでは onClick 内で input.value="" をセットすると onChange が
-            // ファイルピッカーを開く前に発火し、前回のファイルが渡されてしまう。
-            // ここでリセットすることで、同じファイルの再選択も可能にしつつ
-            // Safariの誤発火を防ぐ。
-            e.target.value = "";
-            if (!file) return;
-            setError(null);
+    const processFile = useCallback(
+        async (file: File) => {
+            if (!isSupportedImage(file)) {
+                setError("PNG、JPEG、WebP形式の画像を選択してください。");
+                return
+            }
 
             try {
                 const extractedTags = await analyzeImage(file);
@@ -49,10 +48,35 @@ export default function ScreenshotAnalysis({ applyOcrTags }: ScreenshotAnalysisP
             }
         },
         [analyzeImage, applyOcrTags]
+    )
+
+    const handleFileChange = useCallback(
+        async (e: React.ChangeEvent<HTMLInputElement>) => {
+            const file = e.target.files?.[0];
+            // Safariでは onClick 内で input.value="" をセットすると onChange が
+            // ファイルピッカーを開く前に発火し、前回のファイルが渡されてしまう。
+            // ここでリセットすることで、同じファイルの再選択も可能にしつつ
+            // Safariの誤発火を防ぐ。
+            e.target.value = "";
+            if (file) void processFile(file)
+        },
+        [processFile]
+    );
+
+    const handlePaste = useCallback(
+        (e: React.ClipboardEvent<HTMLDivElement>) => {
+            const file = Array.from(e.clipboardData.files)
+                .find(isSupportedImage);
+            if (!file) return;
+
+            e.preventDefault();
+            void processFile(file);
+        },
+        [processFile]
     );
 
     return (
-        <>
+        <div onPaste={handlePaste}>
             <hgroup className="flex items-center gap-3">
                 <h2 className="text-3xl font-extrabold tracking-tight">Image Analysis</h2>
                 <p className="mt-1 text-gray-500 dark:text-gray-400 font-bold tracking-tight">画像解析</p>
@@ -124,6 +148,6 @@ export default function ScreenshotAnalysis({ applyOcrTags }: ScreenshotAnalysisP
                     </ul>
                 </div>
             )}
-        </>
+        </div>
     );
 }
